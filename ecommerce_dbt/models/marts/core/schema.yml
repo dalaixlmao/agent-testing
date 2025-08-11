@@ -1,0 +1,175 @@
+version: 2
+
+models:
+  - name: dim_customers
+    description: Customer dimension table with customer attributes and metrics
+    tests:
+      - dbt_expectations.expect_table_row_count_to_be_between:
+          min_value: 1
+          max_value: 1000000
+    columns:
+      - name: customer_key
+        description: Surrogate key for the customer dimension
+        tests:
+          - not_null
+          - unique
+      - name: customer_id
+        description: Business key / natural key for the customer
+        tests:
+          - not_null
+          - unique
+      - name: email
+        description: Customer email address
+        tests:
+          - not_null_proportion:
+              at_least: 0.95
+      - name: customer_segment
+        description: Customer segmentation based on order behavior
+        tests:
+          - accepted_values:
+              values: ['New Customer', 'One-time Customer', 'Repeat Customer', 'Loyal Customer', 'Unknown']
+      - name: lifetime_order_count
+        description: Total number of orders placed by the customer
+      - name: lifetime_order_value
+        description: Total value of all orders placed by the customer
+        tests:
+          - value_in_expected_range:
+              min_value: 0
+              inclusive: true
+
+  - name: dim_products
+    description: Product dimension table with product attributes
+    tests:
+      - dbt_expectations.expect_table_row_count_to_be_between:
+          min_value: 1
+          max_value: 1000000
+    columns:
+      - name: product_key
+        description: Surrogate key for the product dimension
+        tests:
+          - not_null
+          - unique
+      - name: product_id
+        description: Business key / natural key for the product
+        tests:
+          - not_null
+          - unique
+      - name: product_name
+        description: Name of the product
+        tests:
+          - not_null
+      - name: price
+        description: Current price of the product
+        tests:
+          - not_null
+          - value_in_expected_range:
+              min_value: 0
+              inclusive: false
+      - name: margin
+        description: Profit margin in currency amount (price - cost)
+      - name: margin_percentage
+        description: Profit margin percentage ((price - cost) / price * 100)
+      - name: stock_status
+        description: Current stock level categorization
+        tests:
+          - accepted_values:
+              values: ['Out of Stock', 'Low Stock', 'Medium Stock', 'High Stock', 'Unknown']
+
+  - name: fct_orders
+    description: Order fact table with order metrics and relationships to dimensions
+    tests:
+      - dbt_expectations.expect_table_row_count_to_be_between:
+          min_value: 1
+          max_value: 5000000
+    columns:
+      - name: order_key
+        description: Surrogate key for the order fact
+        tests:
+          - not_null
+          - unique
+      - name: order_id
+        description: Business key / natural key for the order
+        tests:
+          - not_null
+          - unique
+      - name: customer_key
+        description: Foreign key to dim_customers
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_customers')
+              field: customer_key
+      - name: order_date
+        description: Date the order was placed
+        tests:
+          - not_null
+      - name: order_status
+        description: Current status of the order
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['pending', 'processing', 'shipped', 'delivered', 'cancelled', 'returned', 'completed']
+      - name: order_total
+        description: Total amount of the order including tax and shipping
+        tests:
+          - not_null
+          - value_in_expected_range:
+              min_value: 0
+              inclusive: true
+      - name: total_items
+        description: Total quantity of items in the order
+        tests:
+          - value_in_expected_range:
+              min_value: 0
+              inclusive: true
+      - name: payment_status
+        description: Status of payment for the order
+        tests:
+          - accepted_values:
+              values: ['Fully Paid', 'Partially Paid', 'Not Paid']
+
+  - name: fct_order_items
+    description: Order line item fact table
+    tests:
+      - dbt_expectations.expect_table_row_count_to_be_between:
+          min_value: 1
+          max_value: 10000000
+    columns:
+      - name: order_item_key
+        description: Surrogate key for the order item fact
+        tests:
+          - not_null
+          - unique
+      - name: order_key
+        description: Foreign key to fct_orders
+        tests:
+          - not_null
+          - relationships:
+              to: ref('fct_orders')
+              field: order_key
+      - name: product_key
+        description: Foreign key to dim_products
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_products')
+              field: product_key
+      - name: quantity
+        description: Quantity of the product ordered
+        tests:
+          - not_null
+          - value_in_expected_range:
+              min_value: 1
+              inclusive: true
+      - name: unit_price
+        description: Price per unit of the product at time of order
+        tests:
+          - not_null
+      - name: extended_price
+        description: Total price before discounts (quantity * unit_price)
+        tests:
+          - not_null
+      - name: net_price
+        description: Total price after discounts (extended_price - discount_amount)
+        tests:
+          - not_null
