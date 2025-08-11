@@ -1,0 +1,180 @@
+version: 2
+
+sources:
+  - name: ecommerce_raw
+    description: Raw data from the e-commerce operational database
+    schema: ecommerce_raw
+    tables:
+      - name: customers
+        description: Customer information including contact details and demographics
+        columns:
+          - name: customer_id
+            description: Primary key of the customers table
+            tests:
+              - unique
+              - not_null
+        loaded_at_field: last_updated_at
+        freshness:
+          warn_after: {count: 12, period: hour}
+          error_after: {count: 24, period: hour}
+      
+      - name: orders
+        description: Order header information
+        columns:
+          - name: order_id
+            description: Primary key of the orders table
+            tests:
+              - unique
+              - not_null
+          - name: customer_id
+            description: Foreign key to customers table
+            tests:
+              - not_null
+              - relationships:
+                  to: source('ecommerce_raw', 'customers')
+                  field: customer_id
+        loaded_at_field: last_updated_at
+        freshness:
+          warn_after: {count: 6, period: hour}
+          error_after: {count: 12, period: hour}
+      
+      - name: order_items
+        description: Order line items with products and quantities
+        columns:
+          - name: order_item_id
+            description: Primary key of the order_items table
+            tests:
+              - unique
+              - not_null
+          - name: order_id
+            description: Foreign key to orders table
+            tests:
+              - not_null
+              - relationships:
+                  to: source('ecommerce_raw', 'orders')
+                  field: order_id
+          - name: product_id
+            description: Foreign key to products table
+            tests:
+              - not_null
+              - relationships:
+                  to: source('ecommerce_raw', 'products')
+                  field: product_id
+        loaded_at_field: last_updated_at
+        freshness:
+          warn_after: {count: 6, period: hour}
+          error_after: {count: 12, period: hour}
+      
+      - name: products
+        description: Product information including prices and categories
+        columns:
+          - name: product_id
+            description: Primary key of the products table
+            tests:
+              - unique
+              - not_null
+          - name: category_id
+            description: Foreign key to categories table
+            tests:
+              - relationships:
+                  to: source('ecommerce_raw', 'categories')
+                  field: category_id
+        loaded_at_field: last_updated_at
+        freshness:
+          warn_after: {count: 24, period: hour}
+          error_after: {count: 48, period: hour}
+      
+      - name: categories
+        description: Product categories hierarchy
+        columns:
+          - name: category_id
+            description: Primary key of the categories table
+            tests:
+              - unique
+              - not_null
+          - name: parent_category_id
+            description: Self-referencing foreign key to parent category
+        loaded_at_field: last_updated_at
+        freshness:
+          warn_after: {count: 24, period: hour}
+          error_after: {count: 48, period: hour}
+          
+      - name: inventory
+        description: Current inventory levels by product and location
+        columns:
+          - name: inventory_id
+            description: Primary key of the inventory table
+            tests:
+              - unique
+              - not_null
+          - name: product_id
+            description: Foreign key to products table
+            tests:
+              - not_null
+              - relationships:
+                  to: source('ecommerce_raw', 'products')
+                  field: product_id
+        loaded_at_field: last_updated_at
+        freshness:
+          warn_after: {count: 6, period: hour}
+          error_after: {count: 12, period: hour}
+          
+      - name: payments
+        description: Payment information for orders
+        columns:
+          - name: payment_id
+            description: Primary key of the payments table
+            tests:
+              - unique
+              - not_null
+          - name: order_id
+            description: Foreign key to orders table
+            tests:
+              - not_null
+              - relationships:
+                  to: source('ecommerce_raw', 'orders')
+                  field: order_id
+        loaded_at_field: last_updated_at
+        freshness:
+          warn_after: {count: 6, period: hour}
+          error_after: {count: 12, period: hour}
+          
+      - name: marketing_campaigns
+        description: Marketing campaign information
+        columns:
+          - name: campaign_id
+            description: Primary key of the marketing_campaigns table
+            tests:
+              - unique
+              - not_null
+        loaded_at_field: last_updated_at
+        freshness:
+          warn_after: {count: 24, period: hour}
+          error_after: {count: 48, period: hour}
+          
+      - name: customer_marketing_interactions
+        description: Customer interactions with marketing campaigns
+        columns:
+          - name: interaction_id
+            description: Primary key of the customer_marketing_interactions table
+            tests:
+              - unique
+              - not_null
+          - name: customer_id
+            description: Foreign key to customers table
+            tests:
+              - not_null
+              - relationships:
+                  to: source('ecommerce_raw', 'customers')
+                  field: customer_id
+          - name: campaign_id
+            description: Foreign key to marketing_campaigns table
+            tests:
+              - not_null
+              - relationships:
+                  to: source('ecommerce_raw', 'marketing_campaigns')
+                  field: campaign_id
+        loaded_at_field: last_updated_at
+        freshness:
+          warn_after: {count: 12, period: hour}
+          error_after: {count: 24, period: hour}

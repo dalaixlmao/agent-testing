@@ -1,0 +1,19 @@
+target/
+dbt_packages/
+logs/
+.user.yml
+.DS_Store
+.env
+venv/
+env/
+
+# Local development files
+profiles.yml
+local_profiles/
+
+# Editor files
+.idea/
+.vscode/
+*.swp
+*~
+*.bak

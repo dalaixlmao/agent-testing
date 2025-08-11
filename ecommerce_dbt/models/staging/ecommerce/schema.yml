@@ -1,0 +1,137 @@
+version: 2
+
+models:
+  - name: stg_ecommerce__customers
+    description: Cleaned and standardized customer data
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - customer_id
+      - dbt_expectations.expect_table_row_count_to_be_between:
+          min_value: 1
+          max_value: 1000000
+    columns:
+      - name: customer_id
+        description: Primary key for the customers table
+        tests:
+          - not_null
+          - unique
+      - name: email
+        description: Customer email address
+        tests:
+          - not_null_proportion:
+              at_least: 0.95
+      - name: is_valid_email
+        description: Flag indicating if the email is valid
+      - name: customer_created_date
+        description: Date the customer was created
+        tests:
+          - not_null
+
+  - name: stg_ecommerce__orders
+    description: Cleaned and standardized order header data
+    tests:
+      - dbt_expectations.expect_table_row_count_to_be_between:
+          min_value: 1
+          max_value: 5000000
+    columns:
+      - name: order_id
+        description: Primary key for the orders table
+        tests:
+          - not_null
+          - unique
+      - name: customer_id
+        description: Foreign key to customers table
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_ecommerce__customers')
+              field: customer_id
+      - name: order_date
+        description: Date the order was placed
+        tests:
+          - not_null
+          - recency:
+              datepart: day
+              interval: 30
+      - name: order_status
+        description: Current status of the order
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['pending', 'processing', 'shipped', 'delivered', 'cancelled', 'returned', 'completed']
+      - name: order_total
+        description: Total amount of the order including tax and shipping
+        tests:
+          - not_null
+          - value_in_expected_range:
+              min_value: 0
+              inclusive: true
+              at_least_pct: 0.999
+
+  - name: stg_ecommerce__order_items
+    description: Cleaned and standardized order line items
+    tests:
+      - dbt_expectations.expect_table_row_count_to_be_between:
+          min_value: 1
+          max_value: 10000000
+    columns:
+      - name: order_item_id
+        description: Primary key for the order items table
+        tests:
+          - not_null
+          - unique
+      - name: order_id
+        description: Foreign key to orders table
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_ecommerce__orders')
+              field: order_id
+      - name: product_id
+        description: Foreign key to products table
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_ecommerce__products')
+              field: product_id
+      - name: quantity
+        description: Quantity of the product ordered
+        tests:
+          - not_null
+          - value_in_expected_range:
+              min_value: 1
+              inclusive: true
+              at_least_pct: 0.999
+
+  - name: stg_ecommerce__products
+    description: Cleaned and standardized product data
+    columns:
+      - name: product_id
+        description: Primary key for the products table
+        tests:
+          - not_null
+          - unique
+      - name: product_name
+        description: Name of the product
+        tests:
+          - not_null
+      - name: category_id
+        description: Foreign key to categories table
+        tests:
+          - relationships:
+              to: ref('stg_ecommerce__categories')
+              field: category_id
+
+  - name: stg_ecommerce__categories
+    description: Cleaned and standardized product categories
+    columns:
+      - name: category_id
+        description: Primary key for the categories table
+        tests:
+          - not_null
+          - unique
+      - name: category_name
+        description: Name of the category
+        tests:
+          - not_null

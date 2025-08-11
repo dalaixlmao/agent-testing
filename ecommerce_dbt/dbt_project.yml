@@ -1,0 +1,45 @@
+name: 'ecommerce_dbt'
+version: '1.0.0'
+config-version: 2
+
+profile: 'ecommerce_dbt'
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  ecommerce_dbt:
+    +materialized: table
+    staging:
+      +materialized: view
+      +tags: ["staging"]
+    intermediate:
+      +materialized: ephemeral
+      +tags: ["intermediate"]
+    marts:
+      +materialized: table
+      core:
+        +tags: ["core"]
+      marketing:
+        +tags: ["marketing"]
+      finance:
+        +tags: ["finance"]
+
+seeds:
+  ecommerce_dbt:
+    +schema: seed_data
+    +tags: ["seed"]
+
+snapshots:
+  ecommerce_dbt:
+    +target_schema: snapshots
+    +tags: ["snapshot"]
