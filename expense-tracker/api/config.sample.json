@@ -1,0 +1,20 @@
+{
+  "server": {
+    "port": "8080",
+    "readTimeout": 10,
+    "writeTimeout": 10,
+    "idleTimeout": 60,
+    "allowedOrigin": "*"
+  },
+  "database": {
+    "driver": "sqlite3",
+    "connectionString": "./expense_tracker.db",
+    "maxOpenConns": 10,
+    "maxIdleConns": 5,
+    "connMaxLifetime": 300
+  },
+  "auth": {
+    "jwtSecret": "replace-this-with-a-secure-secret-in-production",
+    "tokenExpiryHours": 24
+  }
+}
