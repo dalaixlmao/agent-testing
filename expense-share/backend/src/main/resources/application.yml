@@ -53,9 +53,7 @@ app:
   cors:
     allowed-origins: http://localhost:5173,http://localhost:3000
   oauth2:
-    authorized-redirect-uris:
-      - http://localhost:5173/oauth2/redirect
-      - http://localhost:3000/oauth2/redirect
+    authorized-redirect-uris: http://localhost:5173/oauth2/redirect,http://localhost:3000/oauth2/redirect
 
 logging:
   level:
