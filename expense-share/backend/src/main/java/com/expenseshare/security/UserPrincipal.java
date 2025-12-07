@@ -83,7 +83,7 @@ public class UserPrincipal implements UserDetails, OAuth2User {
     }
 
     @Override
-    public Map<String, Object> getName() {
-        return attributes;
+    public String getName() {
+        return email;
     }
 }

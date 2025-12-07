@@ -38,5 +38,6 @@ public class ExpenseShare {
     private BigDecimal shareAmount;
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean settled = false;
 }
