@@ -79,14 +79,7 @@ public class SecurityConfig {
                 .requestMatchers(
                     "/",
                     "/error",
-                    "/favicon.ico",
-                    "/**/*.png",
-                    "/**/*.gif",
-                    "/**/*.svg",
-                    "/**/*.jpg",
-                    "/**/*.html",
-                    "/**/*.css",
-                    "/**/*.js"
+                    "/favicon.ico"
                 ).permitAll()
                 .requestMatchers(
                     "/api/auth/**",
